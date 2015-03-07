@@ -41,15 +41,15 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)bin\baseq2\</OutDir>
+    <OutDir>bin\</OutDir>
     <IntDir>build\</IntDir>
-    <TargetName>$(ProjectName)x86</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)bin\baseq2\</OutDir>
+    <OutDir>bin\</OutDir>
     <IntDir>build\</IntDir>
-    <TargetName>$(ProjectName)x86</TargetName>
+    <TargetName>$(ProjectName)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -65,6 +65,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>game.def</ModuleDefinitionFile>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\baseq2\" /d /y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -84,6 +87,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <ModuleDefinitionFile>game.def</ModuleDefinitionFile>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy "$(TargetPath)" "$(SolutionDir)bin\baseq2\" /d /y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="g_ai.c" />

@@ -34,8 +34,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define MINIMUM_WIN_MEMORY	0x0a00000
 #define MAXIMUM_WIN_MEMORY	0x1000000
 
-//#define DEMO
-
 qboolean s_win95;
 
 int			starttime;
@@ -127,77 +125,6 @@ void WinError (void)
 
 //================================================================
 
-
-/*
-================
-Sys_ScanForCD
-
-================
-*/
-char *Sys_ScanForCD (void)
-{
-	static char	cddir[MAX_OSPATH];
-	static qboolean	done;
-#ifndef DEMO
-	char		drive[4];
-	FILE		*f;
-	char		test[MAX_QPATH];
-
-	if (done)		// don't re-check
-		return cddir;
-
-	// no abort/retry/fail errors
-	SetErrorMode (SEM_FAILCRITICALERRORS);
-
-	drive[0] = 'c';
-	drive[1] = ':';
-	drive[2] = '\\';
-	drive[3] = 0;
-
-	done = true;
-
-	// scan the drives
-	for (drive[0] = 'c' ; drive[0] <= 'z' ; drive[0]++)
-	{
-		// where activision put the stuff...
-		sprintf (cddir, "%sinstall\\data", drive);
-		sprintf (test, "%sinstall\\data\\quake2.exe", drive);
-		f = fopen(test, "r");
-		if (f)
-		{
-			fclose (f);
-			if (GetDriveType (drive) == DRIVE_CDROM)
-				return cddir;
-		}
-	}
-#endif
-
-	cddir[0] = 0;
-	
-	return NULL;
-}
-
-/*
-================
-Sys_CopyProtect
-
-================
-*/
-void	Sys_CopyProtect (void)
-{
-#ifndef DEMO
-	char	*cddir;
-
-	cddir = Sys_ScanForCD();
-	if (!cddir[0])
-		Com_Error (ERR_FATAL, "You must have the Quake2 CD in the drive to play.");
-#endif
-}
-
-
-//================================================================
-
-
 /*
 ================
 Sys_Init
@@ -205,41 +132,7 @@ Sys_Init
 */
 void Sys_Init (void)
 {
-	OSVERSIONINFO	vinfo;
-
-#if 0
-	// allocate a named semaphore on the client so the
-	// front end can tell if it is alive
-
-	// mutex will fail if semephore already exists
-    qwclsemaphore = CreateMutex(
-        NULL,         /* Security attributes */
-        0,            /* owner       */
-        "qwcl"); /* Semaphore name      */
-	if (!qwclsemaphore)
-		Sys_Error ("QWCL is already running on this system");
-	CloseHandle (qwclsemaphore);
-
-    qwclsemaphore = CreateSemaphore(
-        NULL,         /* Security attributes */
-        0,            /* Initial count       */
-        1,            /* Maximum count       */
-        "qwcl"); /* Semaphore name      */
-#endif
-
-	timeBeginPeriod( 1 );
-
-	vinfo.dwOSVersionInfoSize = sizeof(vinfo);
-
-	if (!GetVersionEx (&vinfo))
-		Sys_Error ("Couldn't get OS info");
-
-	if (vinfo.dwMajorVersion < 4)
-		Sys_Error ("Quake2 requires windows version 4 or greater");
-	if (vinfo.dwPlatformId == VER_PLATFORM_WIN32s)
-		Sys_Error ("Quake2 doesn't run on Win32s");
-	else if ( vinfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS )
-		s_win95 = true;
+	timeBeginPeriod( 1 ); // @TODO: What is this for?
 
 	if (dedicated->value)
 	{
@@ -472,69 +365,27 @@ Loads the game dll
 void *Sys_GetGameAPI (void *parms)
 {
 	void	*(*GetGameAPI) (void *);
-	char	name[MAX_OSPATH];
+	char   gamePath[MAX_OSPATH];
 	char	*path;
 	char	cwd[MAX_OSPATH];
-#if defined _M_IX86
-	const char *gamename = "gamex86.dll";
 
-#ifdef NDEBUG
-	const char *debugdir = "release";
-#else
-	const char *debugdir = "debug";
-#endif
-
-#elif defined _M_ALPHA
-	const char *gamename = "gameaxp.dll";
-
-#ifdef NDEBUG
-	const char *debugdir = "releaseaxp";
-#else
-	const char *debugdir = "debugaxp";
-#endif
-
-#endif
-
+	// If we already have a game loaded
 	if (game_library)
 		Com_Error (ERR_FATAL, "Sys_GetGameAPI without Sys_UnloadingGame");
 
-	// check the current debug directory first for development purposes
-	_getcwd (cwd, sizeof(cwd));
-	Com_sprintf (name, sizeof(name), "%s/%s/%s", cwd, debugdir, gamename);
-	game_library = LoadLibrary ( name );
+	// Attempt to load the game library
+	Com_sprintf(gamePath, sizeof(gamePath), "%s/%s", BASEDIRNAME, "game.dll");
+	game_library = LoadLibrary ( gamePath );
 	if (game_library)
 	{
-		Com_DPrintf ("LoadLibrary (%s)\n", name);
+		Com_DPrintf ("LoadLibrary (%s)\n", gamePath);
 	}
 	else
 	{
-		// check the current directory for other development purposes
-		Com_sprintf (name, sizeof(name), "%s/%s", cwd, gamename);
-		game_library = LoadLibrary ( name );
-		if (game_library)
-		{
-			Com_DPrintf ("LoadLibrary (%s)\n", name);
-		}
-		else
-		{
-			// now run through the search paths
-			path = NULL;
-			while (1)
-			{
-				path = FS_NextPath (path);
-				if (!path)
-					return NULL;		// couldn't find one anywhere
-				Com_sprintf (name, sizeof(name), "%s/%s", path, gamename);
-				game_library = LoadLibrary (name);
-				if (game_library)
-				{
-					Com_DPrintf ("LoadLibrary (%s)\n",name);
-					break;
-				}
-			}
-		}
+		return NULL;
 	}
 
+	// Get the game's API
 	GetGameAPI = (void *)GetProcAddress (game_library, "GetGameAPI");
 	if (!GetGameAPI)
 	{
@@ -576,11 +427,9 @@ void ParseCommandLine (LPSTR lpCmdLine)
 			{
 				*lpCmdLine = 0;
 				lpCmdLine++;
-			}
-			
+			}		
 		}
 	}
-
 }
 
 /*
@@ -595,7 +444,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 {
     MSG				msg;
 	int				time, oldtime, newtime;
-	char			*cddir;
 
     /* previous instances do not exist in Win32 */
     if (hPrevInstance)
@@ -604,24 +452,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	global_hInstance = hInstance;
 
 	ParseCommandLine (lpCmdLine);
-
-	// if we find the CD, add a +set cddir xxx command line
-	cddir = Sys_ScanForCD ();
-	if (cddir && argc < MAX_NUM_ARGVS - 3)
-	{
-		int		i;
-
-		// don't override a cddir on the command line
-		for (i=0 ; i<argc ; i++)
-			if (!strcmp(argv[i], "cddir"))
-				break;
-		if (i == argc)
-		{
-			argv[argc++] = "+set";
-			argv[argc++] = "cddir";
-			argv[argc++] = cddir;
-		}
-	}
 
 	Qcommon_Init (argc, argv);
 	oldtime = Sys_Milliseconds ();
@@ -649,9 +479,7 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 			newtime = Sys_Milliseconds ();
 			time = newtime - oldtime;
 		} while (time < 1);
-//			Con_Printf ("time:%5.2f - %5.2f = %5.2f\n", newtime, oldtime, time);
 
-		//	_controlfp( ~( _EM_ZERODIVIDE /*| _EM_INVALID*/ ), _MCW_EM );
 		_controlfp( _PC_24, _MCW_PC );
 		Qcommon_Frame (time);
 
