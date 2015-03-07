@@ -1333,7 +1333,6 @@ void Com_Error_f (void)
 	Com_Error (ERR_FATAL, "%s", Cmd_Argv(1));
 }
 
-
 /*
 =================
 Qcommon_Init
