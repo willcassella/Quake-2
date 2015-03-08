@@ -244,7 +244,7 @@ void IN_MouseEvent (int mstate)
 	if (!mouseinitialized)
 		return;
 
-// perform button actions
+	// perform button actions
 	for (i=0 ; i<mouse_buttons ; i++)
 	{
 		if ( (mstate & (1<<i)) &&
@@ -283,11 +283,6 @@ void IN_MouseMove (usercmd_t *cmd)
 	mx = current_pos.x - window_center_x;
 	my = current_pos.y - window_center_y;
 
-#if 0
-	if (!mx && !my)
-		return;
-#endif
-
 	if (m_filter->value)
 	{
 		mouse_x = (mx + old_mouse_x) * 0.5;
@@ -305,7 +300,7 @@ void IN_MouseMove (usercmd_t *cmd)
 	mouse_x *= sensitivity->value;
 	mouse_y *= sensitivity->value;
 
-// add mouse X/Y movement to cmd
+	// add mouse X/Y movement to cmd
 	if ( (in_strafe.state & 1) || (lookstrafe->value && mlooking ))
 		cmd->sidemove += m_side->value * mouse_x;
 	else

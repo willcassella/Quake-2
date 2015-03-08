@@ -3870,24 +3870,6 @@ void M_Menu_PlayerConfig_f (void)
 	M_PushMenu( PlayerConfig_MenuDraw, PlayerConfig_MenuKey );
 }
 
-
-/*
-=======================================================================
-
-GALLERY MENU
-
-=======================================================================
-*/
-#if 0
-void M_Menu_Gallery_f( void )
-{
-	extern void Gallery_MenuDraw( void );
-	extern const char *Gallery_MenuKey( int key );
-
-	M_PushMenu( Gallery_MenuDraw, Gallery_MenuKey );
-}
-#endif
-
 /*
 =======================================================================
 

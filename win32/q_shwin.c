@@ -80,19 +80,7 @@ void *Hunk_Alloc (int size)
 
 int Hunk_End (void)
 {
-
-	// free the remaining unused virtual memory
-#if 0
-	void	*buf;
-
-	// write protect it
-	buf = VirtualAlloc (membase, cursize, MEM_COMMIT, PAGE_READONLY);
-	if (!buf)
-		Sys_Error ("VirtualAlloc commit failed");
-#endif
-
 	hunkcount++;
-//Com_Printf ("hunkcount: %i\n", hunkcount);
 	return cursize;
 }
 
