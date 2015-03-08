@@ -60,7 +60,6 @@ typedef struct pack_s
 
 char	fs_gamedir[MAX_OSPATH];
 cvar_t	*fs_basedir;
-cvar_t	*fs_cddir;
 cvar_t	*fs_gamedirvar;
 
 typedef struct filelink_s
@@ -341,7 +340,6 @@ FS_ReadFile
 Properly handles partial reads
 =================
 */
-void CDAudio_Stop(void);
 #define	MAX_READ	0x10000		// read in blocks of 64k
 void FS_Read (void *buffer, int len, FILE *f)
 {
@@ -362,16 +360,7 @@ void FS_Read (void *buffer, int len, FILE *f)
 			block = MAX_READ;
 		read = fread (buf, 1, block, f);
 		if (read == 0)
-		{
-			// we might have been trying to read from a CD
-			if (!tries)
-			{
-				tries = 1;
-				CDAudio_Stop();
-			}
-			else
-				Com_Error (ERR_FATAL, "FS_Read: 0 bytes read");
-		}
+			Com_Error (ERR_FATAL, "FS_Read: 0 bytes read");
 
 		if (read == -1)
 			Com_Error (ERR_FATAL, "FS_Read: -1 bytes read");
@@ -628,8 +617,6 @@ void FS_SetGamedir (char *dir)
 	else
 	{
 		Cvar_FullSet ("gamedir", dir, CVAR_SERVERINFO|CVAR_NOSET);
-		if (fs_cddir->string[0])
-			FS_AddGameDirectory (va("%s/%s", fs_cddir->string, dir) );
 		FS_AddGameDirectory (va("%s/%s", fs_basedir->string, dir) );
 	}
 }
@@ -849,15 +836,6 @@ void FS_InitFilesystem (void)
 	// allows the game to run from outside the data tree
 	//
 	fs_basedir = Cvar_Get ("basedir", ".", CVAR_NOSET);
-
-	//
-	// cddir <path>
-	// Logically concatenates the cddir after the basedir for 
-	// allows the game to run from outside the data tree
-	//
-	fs_cddir = Cvar_Get ("cddir", "", CVAR_NOSET);
-	if (fs_cddir->string[0])
-		FS_AddGameDirectory (va("%s/"BASEDIRNAME, fs_cddir->string) );
 
 	//
 	// start up with the game directory by default

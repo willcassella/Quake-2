@@ -34,8 +34,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define MINIMUM_WIN_MEMORY	0x0a00000
 #define MAXIMUM_WIN_MEMORY	0x1000000
 
-qboolean s_win95;
-
 int			starttime;
 int			ActiveApp;
 qboolean	Minimized;
@@ -365,8 +363,8 @@ Loads the game dll
 void *Sys_GetGameAPI (void *parms)
 {
 	void	*(*GetGameAPI) (void *);
-	char   gamePath[MAX_OSPATH];
-	char	*path;
+	char	gamePath[MAX_OSPATH];
+	char	*path = NULL;
 	char	cwd[MAX_OSPATH];
 
 	// If we already have a game loaded
@@ -444,10 +442,6 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 {
     MSG				msg;
 	int				time, oldtime, newtime;
-
-    /* previous instances do not exist in Win32 */
-    if (hPrevInstance)
-        return 0;
 
 	global_hInstance = hInstance;
 

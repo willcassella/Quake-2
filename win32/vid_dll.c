@@ -25,7 +25,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "..\client\client.h"
 #include "winquake.h"
-//#include "zmouse.h"
 
 // Structure containing functions exported from refresh DLL
 refexport_t	re;
@@ -63,24 +62,14 @@ extern	unsigned	sys_msg_time;
 /*
 ** WIN32 helper functions
 */
-extern qboolean s_win95;
 
 static void WIN_DisableAltTab( void )
 {
 	if ( s_alttab_disabled )
 		return;
 
-	if ( s_win95 )
-	{
-		BOOL old;
-
-		SystemParametersInfo( SPI_SCREENSAVERRUNNING, 1, &old, 0 );
-	}
-	else
-	{
-		RegisterHotKey( 0, 0, MOD_ALT, VK_TAB );
-		RegisterHotKey( 0, 1, MOD_ALT, VK_RETURN );
-	}
+	RegisterHotKey( 0, 0, MOD_ALT, VK_TAB );
+	RegisterHotKey( 0, 1, MOD_ALT, VK_RETURN );
 	s_alttab_disabled = true;
 }
 
@@ -88,17 +77,8 @@ static void WIN_EnableAltTab( void )
 {
 	if ( s_alttab_disabled )
 	{
-		if ( s_win95 )
-		{
-			BOOL old;
-
-			SystemParametersInfo( SPI_SCREENSAVERRUNNING, 0, &old, 0 );
-		}
-		else
-		{
-			UnregisterHotKey( 0, 0 );
-			UnregisterHotKey( 0, 1 );
-		}
+		UnregisterHotKey( 0, 0 );
+		UnregisterHotKey( 0, 1 );
 
 		s_alttab_disabled = false;
 	}
@@ -255,7 +235,6 @@ void AppActivate(BOOL fActive, BOOL minimize)
 	if (!ActiveApp)
 	{
 		IN_Activate (false);
-		CDAudio_Activate (false);
 		S_Activate (false);
 
 		if ( win_noalttab->value )
@@ -266,7 +245,6 @@ void AppActivate(BOOL fActive, BOOL minimize)
 	else
 	{
 		IN_Activate (true);
-		CDAudio_Activate (true);
 		S_Activate (true);
 		if ( win_noalttab->value )
 		{
@@ -434,13 +412,6 @@ LONG WINAPI MainWndProc (
 	case WM_SYSKEYUP:
 	case WM_KEYUP:
 		Key_Event( MapKey( lParam ), false, sys_msg_time);
-		break;
-
-	case MM_MCINOTIFY:
-		{
-			LONG CDAudio_MessageHandler(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-			lRet = CDAudio_MessageHandler (hWnd, uMsg, wParam, lParam);
-		}
 		break;
 
 	default:	// pass all unhandled messages to DefWindowProc
@@ -708,7 +679,7 @@ VID_Init
 void VID_Init (void)
 {
 	/* Create the video variables so we know how to start the graphics drivers */
-	vid_ref = Cvar_Get ("vid_ref", "soft", CVAR_ARCHIVE);
+	vid_ref = Cvar_Get ("vid_ref", "soft", CVAR_ARCHIVE); // @TODO: Investigate this
 	vid_xpos = Cvar_Get ("vid_xpos", "3", CVAR_ARCHIVE);
 	vid_ypos = Cvar_Get ("vid_ypos", "22", CVAR_ARCHIVE);
 	vid_fullscreen = Cvar_Get ("vid_fullscreen", "0", CVAR_ARCHIVE);
@@ -719,26 +690,6 @@ void VID_Init (void)
 	Cmd_AddCommand ("vid_restart", VID_Restart_f);
 	Cmd_AddCommand ("vid_front", VID_Front_f);
 
-	/*
-	** this is a gross hack but necessary to clamp the mode for 3Dfx
-	*/
-#if 0
-	{
-		cvar_t *gl_driver = Cvar_Get( "gl_driver", "opengl32", 0 );
-		cvar_t *gl_mode = Cvar_Get( "gl_mode", "3", 0 );
-
-		if ( stricmp( gl_driver->string, "3dfxgl" ) == 0 )
-		{
-			Cvar_SetValue( "gl_mode", 3 );
-			viddef.width  = 640;
-			viddef.height = 480;
-		}
-	}
-#endif
-
-	/* Disable the 3Dfx splash screen */
-	putenv("FX_GLIDE_NO_SPLASH=0");
-		
 	/* Start the graphics mode and load refresh DLL */
 	VID_CheckChanges();
 }
@@ -756,5 +707,3 @@ void VID_Shutdown (void)
 		VID_FreeReflib ();
 	}
 }
-
-

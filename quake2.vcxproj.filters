@@ -144,9 +144,6 @@
     <ClCompile Include="win32\vid_menu.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="win32\cd_win.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="win32\conproc.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -171,9 +168,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="client\cdaudio.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="client\client.h">
       <Filter>Header Files</Filter>
     </ClInclude>
